@@ -1,16 +1,18 @@
 SHELL=/bin/bash
 MANIFEST=./manifest
-IMAGE=redis:5
+IMAGE_NAME=redis:5
+LOCAL_REGISTRY=10.254.0.50:5000
+IMAGE = ${LOCAL_REGISTRY}/${IMAGE_NAME}
 NAMESPACE=default
-NAME=redis-for-zhang
-CLAIM_NAME=${NAME}-data
+NAME=redis-k8s
+CLAIM_NAME=${NAME}-pvc
 LABELS_KEY=app
 LABELS_VALUE=${NAME}
 IMAGE_PULL_POLICY=IfNotPresent
 CM_NAME=${NAME}-conf
 CONF=./conf
 
-all: deploy
+all: build push deploy
 
 build:
 	@docker build -t ${IMAGE} .
@@ -34,15 +36,10 @@ sed:
 
 deploy: OP=create
 deploy: cp sed
-	@kubectl -n ${NAMESPACE} ${OP} configmap $(CM_NAME) --from-file ${CONF}/redis.conf
-	@kubectl ${OP} -f ${MANIFEST}/.
+	-@kubectl -n ${NAMESPACE} ${OP} configmap $(CM_NAME) --from-file ${CONF}/redis.conf
+	-@kubectl ${OP} -f ${MANIFEST}/.
 
 clean: OP=delete
 clean:
-	@kubectl ${OP} -f ${MANIFEST}/.
-	@kubectl -n ${NAMESPACE} ${OP} configmap $(CM_NAME)
-
-mkcm:
-	-@kubectl -n ${NAMESPACE} delete configmap $(CM_NAME)
-	@kubectl -n ${NAMESPACE} create configmap $(CM_NAME) --from-file ${CONF}/redis.conf
-
+	-@kubectl ${OP} -f ${MANIFEST}/.
+	-@kubectl -n ${NAMESPACE} ${OP} configmap $(CM_NAME)
