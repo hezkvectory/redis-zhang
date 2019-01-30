@@ -6,3 +6,4 @@ redis.conf 中设置 protected-mode（保护模式）
 
 默认没有用户名和密码
 
+使用NFS作为存储
